@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 use Perinci::Access::Schemeless::Hash;
+use Test::Exception;
 use Test::More 0.98;
 
 my $pa = Perinci::Access::Schemeless::Hash->new(hash => {
@@ -93,6 +94,22 @@ test_request(
     },
 );
 
+subtest "invalid hash" => sub {
+    dies_ok { $pa = Perinci::Access::Schemeless::Hash->new(hash => []) }
+        "not given a hash -> dies";
+
+    $pa = Perinci::Access::Schemeless::Hash->new(hash => {
+        '/' => [{v=>1.1}],
+        '/foo/' => {v=>1.1}, # not an array
+    });
+    test_request(
+        name => "value not array -> dies",
+        argv => [meta => "/foo/"],
+        dies => 1,
+    );
+};
+
+
 DONE_TESTING:
 done_testing;
 
@@ -100,7 +117,12 @@ sub test_request {
     my %args = @_;
     my $name = $args{name} // join(" ", @{ $args{argv} });
     subtest $name => sub {
-        my $res = $pa->request(@{ $args{argv} });
+        my $res;
+        eval { $res = $pa->request(@{ $args{argv} }) };
+        if ($args{dies}) {
+            ok($@, "dies");
+            return;
+        }
         my $exp_status = $args{status} // 200;
         is($res->[0], $exp_status, "status")
             or diag explain $res;
