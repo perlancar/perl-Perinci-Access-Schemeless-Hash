@@ -73,6 +73,11 @@ test_request(
     result => [qw(Sub/ func1 func2)],
 );
 test_request(
+    name   => "list: /Foo/Qux/",
+    argv   => [list => "/Foo/Qux/"],
+    result => [qw(Quux)],
+);
+test_request(
     name   => "list: non-existing package leaf",
     argv   => [list => "/Baz/"],
     status => 404,

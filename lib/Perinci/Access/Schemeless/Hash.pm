@@ -70,8 +70,8 @@ sub action_list {
 
     my $uri = $req->{uri};
 
-    return [404, "No such path"]
-        unless exists $self->{hash}{$uri};
+    my $res = $self->get_meta($req);
+    return $res if $res;
 
     my @res;
     my %mem;
