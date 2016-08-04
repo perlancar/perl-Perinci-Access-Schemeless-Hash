@@ -19,6 +19,9 @@ sub new {
 
     $self->{fallback_on_completion} //= 0;
 
+    # cache for performance
+    $self->{_hash_keys} = [sort keys %$hash];
+
     $self;
 }
 
@@ -26,12 +29,24 @@ sub get_meta {
     my ($self, $req) = @_;
 
     my $uri = $req->{uri};
+
+    # exact match
     if (exists $self->{hash}{$uri}) {
         $req->{-meta} = $self->{hash}{$uri}[0];
-    } else {
-        return [404, "No metadata found at specified URI"];
+        return 0;
     }
-    0;
+
+    # a "folder" /foo/ is assumed to exists if a uri /foo/SOMETHING exists
+    if ($uri =~ m!/\z!) {
+        for my $k (@{ $self->{_hash_keys} }) {
+            if (index($k, $uri, 0) == 0) {
+                $req->{-meta} = {v => 1.1};
+                return 0;
+            }
+        }
+    }
+
+    [404, "No metadata found at specified URI"];
 }
 
 sub action_list {
@@ -59,18 +74,20 @@ sub action_list {
         unless exists $self->{hash}{$uri};
 
     my @res;
+    my %mem;
     for my $k (sort keys %{ $self->{hash} }) {
         my $v = $self->{hash}{$k};
-        next unless $k =~ m!\A\Q$uri\E(\w+/?)\z!;
-        my $leaf = $1;
+        next unless $k =~ m!\A\Q$uri\E(\w+/?)!;
+        my $child = $1;
         next unless $filter_path->($k);
+        next if $mem{$child}++;
         if ($detail) {
             push @res, {
-                uri  => $leaf,
-                type => ($leaf =~ m!/\z! ? "package" : "function"),
+                uri  => $child,
+                type => ($child =~ m!/\z! ? "package" : "function"),
             };
         } else {
-            push @res, $leaf;
+            push @res, $child;
         }
     }
 
