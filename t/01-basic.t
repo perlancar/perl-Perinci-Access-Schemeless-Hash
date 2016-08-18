@@ -95,18 +95,16 @@ test_request(
 );
 
 subtest "invalid hash" => sub {
-    dies_ok { $pa = Perinci::Access::Schemeless::Hash->new(hash => []) }
+    dies_ok {
+        $pa = Perinci::Access::Schemeless::Hash->new(hash => []) }
         "not given a hash -> dies";
 
-    $pa = Perinci::Access::Schemeless::Hash->new(hash => {
-        '/' => [{v=>1.1}],
-        '/foo/' => {v=>1.1}, # not an array
-    });
-    test_request(
-        name => "value not array -> dies",
-        argv => [meta => "/foo/"],
-        dies => 1,
-    );
+    dies_ok {
+        $pa = Perinci::Access::Schemeless::Hash->new(hash => {
+            '/' => [{v=>1.1}],
+            '/foo/' => {v=>1.1}, # not an array
+        }); }
+        "hash value not array containing metadata -> dies";
 };
 
 

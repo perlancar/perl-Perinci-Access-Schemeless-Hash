@@ -17,10 +17,18 @@ sub new {
     my $hash = $self->{hash};
     die "Please specify required attribute 'hash'" unless ref($hash) eq 'HASH';
 
+    # check structure of hash
+    my @keys = sort keys %$hash;
+    for my $k (@keys) {
+        my $v = $hash->{$k};
+        die "Attribute 'hash': key (uri) '$k': value must be array [META, ...]"
+            unless ref $v eq 'ARRAY' && ref $v->[0] eq 'HASH';
+    }
+
     $self->{fallback_on_completion} //= 0;
 
     # cache for performance
-    $self->{_hash_keys} = [sort keys %$hash];
+    $self->{_hash_keys} = \@keys;
 
     $self;
 }
