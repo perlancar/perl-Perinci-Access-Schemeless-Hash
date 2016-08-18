@@ -1,5 +1,11 @@
 Revision history for Perinci-Access-Schemeless-Hash
 
+0.003   2016-08-18 (PERLANCAR)
+
+	- [ux] Check hash structure (i.e. value must be array, its first
+	  element must be hash) to avoid dying later.
+
+
 0.002   2016-08-04 (PERLANCAR)
 
 	- [Bugfix] Handle intermediate package ('info' should return
